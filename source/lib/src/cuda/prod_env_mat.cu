@@ -1,4 +1,9 @@
+#if GOOGLE_CUDA
 #include "gpu_cuda.h"
+#elif PADDLE_HIP
+#include "gpu_hip.h"
+#endif
+
 #include "prod_env_mat.h"
 #include <cub/block/block_load.cuh>
 #include <cub/block/block_store.cuh>
@@ -164,15 +169,30 @@ void format_nbor_list_1024 (
   const int nblock = (MAX_NBOR_SIZE + LEN - 1) / LEN;
   dim3 block_grid(nloc, nblock);
   dim3 thread_grid(1, LEN);
+
+  #if GOOGLE_CUDA
   format_nlist_fill_a<<<block_grid, thread_grid>>> (
       key,
       coord, type, gpu_inlist.numneigh, gpu_inlist.firstneigh, rcut, i_idx, MAX_NBOR_SIZE);
+  #elif PADDLE_HIP
+  hipLaunchKernelGGL(format_nlist_fill_a, block_grid, thread_grid, 0, 0,
+      key,
+      coord, type, gpu_inlist.numneigh, gpu_inlist.firstneigh, rcut, i_idx, MAX_NBOR_SIZE);
+  #endif
+  
   const int ITEMS_PER_THREAD = 8;
   const int BLOCK_THREADS = MAX_NBOR_SIZE / ITEMS_PER_THREAD;
   // BlockSortKernel<NeighborInfo, BLOCK_THREADS, ITEMS_PER_THREAD><<<g_grid_size, BLOCK_THREADS>>> (
+  
+  #if GOOGLE_CUDA
   BlockSortKernel<int_64, BLOCK_THREADS, ITEMS_PER_THREAD> <<<nloc, BLOCK_THREADS>>> (
       key, 
       key + nloc * MAX_NBOR_SIZE);
+  #elif PADDLE_HIP
+  hipLaunchKernelGGL(BlockSortKernel<int_64, BLOCK_THREADS, ITEMS_PER_THREAD>, dim3(nloc), dim3(BLOCK_THREADS), 0, 0,
+      key, 
+      key + nloc * MAX_NBOR_SIZE);
+  #endif
 }
 
 template<typename FPTYPE>
@@ -190,15 +210,30 @@ void format_nbor_list_2048 (
   const int nblock = (MAX_NBOR_SIZE + LEN - 1) / LEN;
   dim3 block_grid(nloc, nblock);
   dim3 thread_grid(1, LEN);
+
+  #if GOOGLE_CUDA
   format_nlist_fill_a<<<block_grid, thread_grid>>> (
       key,
       coord, type, gpu_inlist.numneigh, gpu_inlist.firstneigh, rcut, i_idx, MAX_NBOR_SIZE);
+  #elif PADDLE_HIP
+  hipLaunchKernelGGL(format_nlist_fill_a, block_grid, thread_grid, 0, 0,
+      key,
+      coord, type, gpu_inlist.numneigh, gpu_inlist.firstneigh, rcut, i_idx, MAX_NBOR_SIZE);
+  #endif
+
   const int ITEMS_PER_THREAD = 8;
   const int BLOCK_THREADS = MAX_NBOR_SIZE / ITEMS_PER_THREAD;
   // BlockSortKernel<NeighborInfo, BLOCK_THREADS, ITEMS_PER_THREAD><<<g_grid_size, BLOCK_THREADS>>> (
+  
+  #if GOOGLE_CUDA
   BlockSortKernel<int_64, BLOCK_THREADS, ITEMS_PER_THREAD> <<<nloc, BLOCK_THREADS>>> (
       key, 
       key + nloc * MAX_NBOR_SIZE);
+  #elif PADDLE_HIP
+  hipLaunchKernelGGL(BlockSortKernel<int_64, BLOCK_THREADS, ITEMS_PER_THREAD>, dim3(nloc), dim3(BLOCK_THREADS), 0, 0,
+      key, 
+      key + nloc * MAX_NBOR_SIZE);
+  #endif
 }
 
 template<typename FPTYPE>
@@ -216,15 +251,30 @@ void format_nbor_list_4096 (
   const int nblock = (MAX_NBOR_SIZE + LEN - 1) / LEN;
   dim3 block_grid(nloc, nblock);
   dim3 thread_grid(1, LEN);
+
+  #if GOOGLE_CUDA
   format_nlist_fill_a<<<block_grid, thread_grid>>> (
       key,
       coord, type, gpu_inlist.numneigh, gpu_inlist.firstneigh, rcut, i_idx, MAX_NBOR_SIZE);
+  #elif PADDLE_HIP
+  hipLaunchKernelGGL(format_nlist_fill_a, block_grid, thread_grid, 0, 0,
+      key,
+      coord, type, gpu_inlist.numneigh, gpu_inlist.firstneigh, rcut, i_idx, MAX_NBOR_SIZE);
+  #endif
+
   const int ITEMS_PER_THREAD = 16;
   const int BLOCK_THREADS = MAX_NBOR_SIZE / ITEMS_PER_THREAD;
   // BlockSortKernel<NeighborInfo, BLOCK_THREADS, ITEMS_PER_THREAD><<<g_grid_size, BLOCK_THREADS>>> (
+  
+  #if GOOGLE_CUDA
   BlockSortKernel<int_64, BLOCK_THREADS, ITEMS_PER_THREAD> <<<nloc, BLOCK_THREADS>>> (
       key, 
       key + nloc * MAX_NBOR_SIZE);
+  #elif PADDLE_HIP
+  hipLaunchKernelGGL(BlockSortKernel<int_64, BLOCK_THREADS, ITEMS_PER_THREAD>, dim3(nloc), dim3(BLOCK_THREADS), 0, 0,
+      key, 
+      key + nloc * MAX_NBOR_SIZE);
+  #endif
 }
 
 template <typename FPTYPE>
@@ -249,13 +299,26 @@ void format_nbor_list(
   int * i_idx = array_int + sec.size() + nloc * sec.size();
   int_64 * key = array_longlong;
   assert(max_nbor_size == 1024 || max_nbor_size == 2048 || max_nbor_size == 4096);
+
+  #if GOOGLE_CUDA
   cudaErrcheck(cudaMemset(nlist, -1, sizeof(int) * nloc * nnei));
   cudaErrcheck(cudaMemset(key, 0xffffffff, sizeof(int_64) * nloc * max_nbor_size));
-  cudaErrcheck(cudaMemcpy(sec_dev, &sec[0], sizeof(int) * sec.size(), cudaMemcpyHostToDevice));   
+  cudaErrcheck(cudaMemcpy(sec_dev, &sec[0], sizeof(int) * sec.size(), cudaMemcpyHostToDevice));
+  #elif PADDLE_HIP
+  hipErrcheck(hipMemset(nlist, -1, sizeof(int) * nloc * nnei));
+  hipErrcheck(hipMemset(key, 0xffffffff, sizeof(int_64) * nloc * max_nbor_size));
+  hipErrcheck(hipMemcpy(sec_dev, &sec[0], sizeof(int) * sec.size(), hipMemcpyHostToDevice));
+  #endif
 
+  #if GOOGLE_CUDA
   get_i_idx<<<nblock, LEN>>>(
       i_idx,
       nloc, gpu_inlist.ilist);
+  #elif PADDLE_HIP
+  hipLaunchKernelGGL(get_i_idx, dim3(nblock), dim3(LEN), 0, 0,
+      i_idx,
+      nloc, gpu_inlist.ilist);
+  #endif
 
   if (max_nbor_size == 1024) {
     format_nbor_list_1024 (
@@ -273,9 +336,15 @@ void format_nbor_list(
         coord, type, gpu_inlist, nloc, rcut, i_idx); 
   }
 
+  #if GOOGLE_CUDA
   format_nlist_fill_b<<<nblock, LEN>>> (
       nlist,
       nnei, nloc, key, sec_dev, sec.size(), nei_iter, max_nbor_size);
+  #elif PADDLE_HIP
+  hipLaunchKernelGGL(format_nlist_fill_b, dim3(nblock), dim3(LEN), 0, 0,
+      nlist,
+      nnei, nloc, key, sec_dev, sec.size(), nei_iter, max_nbor_size);
+  #endif
 }
 
 template<
@@ -454,16 +523,28 @@ void prod_env_mat_a_gpu_cuda(
 {
   const int nnei = sec.back();
   const int ndescrpt = nnei * 4;
+
+  #if GOOGLE_CUDA
   cudaErrcheck(cudaMemset(em, 0.0, sizeof(FPTYPE) * nloc * ndescrpt));
   cudaErrcheck(cudaMemset(em_deriv, 0.0, sizeof(FPTYPE) * nloc * ndescrpt * 3));
+  #elif PADDLE_HIP
+  hipErrcheck(hipMemset(em, 0.0, sizeof(FPTYPE) * nloc * ndescrpt));
+  hipErrcheck(hipMemset(em_deriv, 0.0, sizeof(FPTYPE) * nloc * ndescrpt * 3));
+  #endif
 
   format_nbor_list(
       nlist, 
       coord, type, gpu_inlist, array_int, array_longlong, max_nbor_size, nloc, nall, rcut, sec);
 
+  #if GOOGLE_CUDA
   compute_env_mat_a<FPTYPE, TPB> <<<nloc, TPB>>> (
       em, em_deriv, rij, 
       coord, avg, std, type, nlist, nnei, rcut_smth, rcut);
+  #elif PADDLE_HIP
+  hipLaunchKernelGGL(compute_env_mat_a<FPTYPE, TPB>, dim3(nloc), dim3(TPB), 0, 0,
+      em, em_deriv, rij, 
+      coord, avg, std, type, nlist, nnei, rcut_smth, rcut);
+  #endif
 }
 
 template <typename FPTYPE>
@@ -488,16 +569,28 @@ void prod_env_mat_r_gpu_cuda(
 {
   const int nnei = sec.back();
   const int ndescrpt = nnei * 1;
+
+  #if GOOGLE_CUDA
   cudaErrcheck(cudaMemset(em, 0.0, sizeof(FPTYPE) * nloc * ndescrpt));
   cudaErrcheck(cudaMemset(em_deriv, 0.0, sizeof(FPTYPE) * nloc * ndescrpt * 3));
+  #elif PADDLE_HIP
+  hipErrcheck(hipMemset(em, 0.0, sizeof(FPTYPE) * nloc * ndescrpt));
+  hipErrcheck(hipMemset(em_deriv, 0.0, sizeof(FPTYPE) * nloc * ndescrpt * 3));
+  #endif
 
   format_nbor_list(
       nlist, 
       coord, type, gpu_inlist, array_int, array_longlong, max_nbor_size, nloc, nall, rcut, sec);
 
+  #if GOOGLE_CUDA
   compute_env_mat_r<FPTYPE, TPB> <<<nloc, TPB>>> (
       em, em_deriv, rij, 
       coord, avg, std, type, nlist, nnei, rcut_smth, rcut);
+  #elif PADDLE_HIP
+  hipLaunchKernelGGL(compute_env_mat_r<FPTYPE, TPB>, dim3(nloc), dim3(TPB), 0, 0,
+      em, em_deriv, rij, 
+      coord, avg, std, type, nlist, nnei, rcut_smth, rcut);
+  #endif
 }
 
 template void prod_env_mat_a_gpu_cuda<float>(float * em, float * em_deriv, float * rij, int * nlist, const float * coord, const int * type, const InputNlist & gpu_inlist, int * array_int, unsigned long long * array_longlong, const int max_nbor_size, const float * avg, const float * std, const int nloc, const int nall, const float rcut, const float rcut_smth, const std::vector<int> sec);

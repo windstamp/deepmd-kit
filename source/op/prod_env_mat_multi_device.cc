@@ -805,7 +805,12 @@ _norm_copy_coord_gpu(
   FPTYPE_shape.AddDim(nall*3);
   context->allocate_temp(DT_DOUBLE, FPTYPE_shape, tensor_list);
   FPTYPE * tmp_coord = (*tensor_list).flat<FPTYPE>().data();
+
+  #if GOOGLE_CUDA
   cudaErrcheck(cudaMemcpy(tmp_coord, coord, sizeof(FPTYPE) * nall * 3, cudaMemcpyDeviceToDevice));
+  #elif PADDLE_HIP
+  hipErrcheck(hipMemcpy(tmp_coord, coord, sizeof(FPTYPE) * nall * 3, hipMemcpyDeviceToDevice));
+  #endif
   
   deepmd::Region<FPTYPE> region;
   init_region_cpu(region, box);

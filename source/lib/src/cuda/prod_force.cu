@@ -1,5 +1,11 @@
 #include "device.h"
+
+#if GOOGLE_CUDA
 #include "gpu_cuda.h"
+#elif PADDLE_HIP
+#include "gpu_hip.h"
+#endif
+
 #include "prod_force.h"
 
 template <
@@ -107,9 +113,16 @@ void prod_force_a_gpu_cuda(
     const int nnei)
 {
   const int ndescrpt = nnei * 4;
+
+  #if GOOGLE_CUDA
   cudaErrcheck(cudaMemset(
       force, 
       0.0, sizeof(FPTYPE) * nall * 3));
+  #elif PADDLE_HIP
+  hipErrcheck(hipMemset(
+      force, 
+      0.0, sizeof(FPTYPE) * nall * 3));
+  #endif
 
   force_deriv_wrt_center_atom<FPTYPE, TPB> <<<nloc, TPB>>>(
       force, 
@@ -135,21 +148,41 @@ void prod_force_r_gpu_cuda(
     const int nnei)
 {
   const int ndescrpt = nnei * 1;
+
+  #if GOOGLE_CUDA
   cudaErrcheck(cudaMemset(
       force, 
       0.0, sizeof(FPTYPE) * nall * 3));
+  #elif PADDLE_HIP
+  hipErrcheck(hipMemset(
+      force, 
+      0.0, sizeof(FPTYPE) * nall * 3));
+  #endif
 
+  #if GOOGLE_CUDA
   force_deriv_wrt_center_atom<FPTYPE, TPB> <<<nloc, TPB>>>(
       force, 
       net_deriv, in_deriv, ndescrpt);
+  #elif PADDLE_HIP
+  hipLaunchKernelGGL(force_deriv_wrt_center_atom<FPTYPE, TPB>, dim3(nloc), dim3(TPB), 0, 0,
+      force, 
+      net_deriv, in_deriv, ndescrpt);
+  #endif
 
   const int LEN = 64;
   const int nblock = (nloc + LEN -1) / LEN;
   dim3 block_grid(nblock, nnei);
   dim3 thread_grid(LEN, 3);
+
+  #if GOOGLE_CUDA
   force_deriv_wrt_neighbors_r<<<block_grid, thread_grid>>>(
       force, 
       net_deriv, in_deriv, nlist, nloc, nnei);
+  #elif PADDLE_HIP
+  hipLaunchKernelGGL(force_deriv_wrt_neighbors_r, block_grid, thread_grid, 0, 0,
+      force, 
+      net_deriv, in_deriv, nlist, nloc, nnei);
+  #endif
 }
 
 template void prod_force_a_gpu_cuda<float>(float * force, const float * net_deriv, const float * in_deriv, const int * nlist, const int nloc, const int nall, const int nnei);

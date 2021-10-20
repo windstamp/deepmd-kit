@@ -1,4 +1,9 @@
+#if GOOGLE_CUDA
 #include "gpu_cuda.h"
+#elif PADDLE_HIP
+#include "gpu_hip.h"
+#endif
+
 #include "prod_virial.h"
 
 template<typename FPTYPE>
@@ -86,21 +91,37 @@ void prod_virial_a_gpu_cuda(
     const int nall, 
     const int nnei)
 {
+  #if GOOGLE_CUDA
   cudaErrcheck(cudaMemset(
       virial, 
       0.0, sizeof(FPTYPE) * 9));
   cudaErrcheck(cudaMemset(
       atom_virial, 
       0.0, sizeof(FPTYPE) * 9 * nall));
-    
+  #elif PADDLE_HIP
+  hipErrcheck(hipMemset(
+      virial, 
+      0.0, sizeof(FPTYPE) * 9));
+  hipErrcheck(hipMemset(
+      atom_virial, 
+      0.0, sizeof(FPTYPE) * 9 * nall));
+  #endif
+
   const int LEN = 16;
   int nblock = (nloc + LEN -1) / LEN;
   dim3 block_grid(nblock, nnei);
   dim3 thread_grid(LEN, 9, 4);
+
   // compute virial of a frame
+  #if GOOGLE_CUDA
   virial_deriv_wrt_neighbors_a<<<block_grid, thread_grid>>>(
       virial, atom_virial, 
       net_deriv, in_deriv, rij, nlist, nloc, nnei);
+  #elif PADDLE_HIP
+  hipLaunchKernelGGL(virial_deriv_wrt_neighbors_a, block_grid, thread_grid, 0, 0,
+      virial, atom_virial, 
+      net_deriv, in_deriv, rij, nlist, nloc, nnei);
+  #endif
 }
 
 template<typename FPTYPE>
@@ -115,21 +136,37 @@ void prod_virial_r_gpu_cuda(
     const int nall, 
     const int nnei)
 {
+  #if GOOGLE_CUDA
   cudaErrcheck(cudaMemset(
       virial, 
       0.0, sizeof(FPTYPE) * 9));
   cudaErrcheck(cudaMemset(
       atom_virial, 
       0.0, sizeof(FPTYPE) * 9 * nall));
-    
+  #elif PADDLE_HIP
+  hipErrcheck(hipMemset(
+      virial, 
+      0.0, sizeof(FPTYPE) * 9));
+  hipErrcheck(hipMemset(
+      atom_virial, 
+      0.0, sizeof(FPTYPE) * 9 * nall));
+  #endif
+
   const int LEN = 16;
   int nblock = (nloc + LEN -1) / LEN;
   dim3 block_grid(nblock, nnei);
   dim3 thread_grid(LEN, 9);
+
   // compute virial of a frame
+  #if GOOGLE_CUDA
   virial_deriv_wrt_neighbors_r<<<block_grid, thread_grid>>>(
       virial, atom_virial, 
       net_deriv, in_deriv, rij, nlist, nloc, nnei);
+  #elif PADDLE_HIP
+  hipLaunchKernelGGL(virial_deriv_wrt_neighbors_r, block_grid, thread_grid, 0, 0,
+      virial, atom_virial, 
+      net_deriv, in_deriv, rij, nlist, nloc, nnei);
+  #endif
 }
 
 template void prod_virial_a_gpu_cuda<float>(float * virial, float * atom_virial, const float * net_deriv, const float * in_deriv, const float * rij, const int * nlist, const int nloc, const int nall, const int nnei);
