@@ -10,4 +10,6 @@ typedef unsigned long long int_64;
 
 #if GOOGLE_CUDA
 #include "gpu_cuda.h"
+#elif PADDLE_HIP
+#include "gpu_hip.h"
 #endif

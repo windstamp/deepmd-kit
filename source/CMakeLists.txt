@@ -69,7 +69,7 @@ else()
   endif()
 endif()
 if (USE_CUDA_TOOLKIT)
-  add_definitions("-D GOOGLE_CUDA")
+  add_definitions("-DGOOGLE_CUDA")
 endif()
 
 # find tensorflow, I need tf abi info

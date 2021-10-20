@@ -69,7 +69,7 @@ TEST_F(TestNormCoord, cpu_case2)
   }
 }
 
-#if GOOGLE_CUDA
+#if GOOGLE_CUDA || PADDLE_HIP
 TEST_F(TestNormCoord, gpu_case0)
 {
   deepmd::Region<double> region;
@@ -157,7 +157,7 @@ TEST_F(TestNormCoord, gpu_case2)
   }
 }
 
-#endif //GOOGLE_CUDA
+#endif //GOOGLE_CUDA || PADDLE_HIP
 
 typedef std::pair<std::vector<double>,std::vector<int>> atom;
 
@@ -322,7 +322,7 @@ TEST_F(TestCopyCoord, cpu_lessmem)
   // 	    << nall << std::endl;
 }
 
-#if GOOGLE_CUDA
+#if GOOGLE_CUDA || PADDLE_HIP
 TEST_F(TestCopyCoord, gpu)
 {
   int mem_size = 1000;
@@ -472,4 +472,4 @@ TEST_F(TestCopyCoord, gpu_lessmem)
   // 	    << nloc << " " 
   // 	    << nall << std::endl;
 }
-#endif //GOOGLE_CUDA
+#endif //GOOGLE_CUDA || PADDLE_HIP

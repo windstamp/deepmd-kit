@@ -26,7 +26,7 @@ void prod_virial_r_cpu(
     const int nall, 
     const int nnei);
 
-#if GOOGLE_CUDA
+#if GOOGLE_CUDA || PADDLE_HIP
 template<typename FPTYPE>
 void prod_virial_a_gpu_cuda(
     FPTYPE * virial, 
@@ -50,6 +50,6 @@ void prod_virial_r_gpu_cuda(
     const int nloc, 
     const int nall, 
     const int nnei);
-#endif // GOOGLE_CUDA
+#endif // GOOGLE_CUDA || PADDLE_HIP
 
 } //namespace deepmd

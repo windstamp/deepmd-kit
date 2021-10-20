@@ -36,7 +36,7 @@ convert_to_phys_cpu(
     const Region<FPTYPE> & region,
     const FPTYPE * ri);
 
-#if GOOGLE_CUDA
+#if GOOGLE_CUDA || PADDLE_HIP
 //only for unittest
 template<typename FPTYPE>
 void
@@ -57,7 +57,7 @@ void
 volume_gpu(
     FPTYPE * volume, 
     const Region<FPTYPE> & region);
-#endif // GOOGLE_CUDA
+#endif // GOOGLE_CUDA || PADDLE_HIP
 
 }
 

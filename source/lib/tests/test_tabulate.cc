@@ -173,7 +173,7 @@ TEST_F(TestTabulate, tabulate_fusion_grad_cpu)
   }
 }
 
-#if GOOGLE_CUDA
+#if GOOGLE_CUDA || PADDLE_HIP
 TEST_F(TestTabulate, tabulate_fusion_gpu_cuda)
 {
   std::vector<double> xyz_scatter(nloc * nnei * last_layer_size, 0.0);
@@ -231,4 +231,4 @@ TEST_F(TestTabulate, tabulate_fusion_grad_gpu_cuda)
     EXPECT_LT(fabs(dy_dem[jj] - expected_dy_dem[jj]) , 1e-5);
   }
 }
-#endif // GOOGLE_CUDA
+#endif // GOOGLE_CUDA || PADDLE_HIP

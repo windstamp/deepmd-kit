@@ -843,7 +843,7 @@ build_nlist_cpu<float>(
     const int & mem_size,
     const float & rcut);
 
-#if GOOGLE_CUDA
+#if GOOGLE_CUDA || PADDLE_HIP
 void deepmd::convert_nlist_gpu_cuda(
     InputNlist & gpu_nlist,
     InputNlist & cpu_nlist,
@@ -874,4 +874,4 @@ void deepmd::free_nlist_gpu_cuda(
   delete_device_memory(gpu_nlist.numneigh);
   delete_device_memory(gpu_nlist.firstneigh);
 }
-#endif // GOOGLE_CUDA
+#endif // GOOGLE_CUDA || PADDLE_HIP

@@ -92,11 +92,11 @@ class ProdVirialSeAOp : public OpKernel {
       const FPTYPE * rij = p_rij + kk * nloc * nnei * 3;
       const int * nlist = p_nlist + kk * nloc * nnei;      
     if (device == "GPU") {
-      #if GOOGLE_CUDA
+      #if GOOGLE_CUDA || PADDLE_HIP
       deepmd::prod_virial_a_gpu_cuda(    
           virial, atom_virial,
           net_deriv, in_deriv, rij, nlist, nloc, nall, nnei);
-      #endif // GOOGLE_CUDA
+      #endif // GOOGLE_CUDA || PADDLE_HIP
     }
     else if (device == "CPU") {
       deepmd::prod_virial_a_cpu(    
@@ -178,11 +178,11 @@ class ProdVirialSeROp : public OpKernel {
       const FPTYPE * rij = p_rij + kk * nloc * nnei * 3;
       const int * nlist = p_nlist + kk * nloc * nnei;      
     if (device == "GPU") {
-      #if GOOGLE_CUDA
+      #if GOOGLE_CUDA || PADDLE_HIP
       deepmd::prod_virial_r_gpu_cuda(    
           virial, atom_virial,
           net_deriv, in_deriv, rij, nlist, nloc, nall, nnei);
-      #endif // GOOGLE_CUDA
+      #endif // GOOGLE_CUDA || PADDLE_HIP
     }
     else if (device == "CPU") {
       deepmd::prod_virial_r_cpu(    
@@ -206,7 +206,7 @@ REGISTER_KERNEL_BUILDER(                                                        
 REGISTER_CPU(float);
 REGISTER_CPU(double);
 // Register the GPU kernels.
-#if GOOGLE_CUDA
+#if GOOGLE_CUDA || PADDLE_HIP
 #define REGISTER_GPU(T)                                                                   \
 REGISTER_KERNEL_BUILDER(                                                                  \
     Name("ProdVirialSeA").Device(DEVICE_GPU).TypeConstraint<T>("T").HostMemory("natoms"), \
@@ -216,4 +216,4 @@ REGISTER_KERNEL_BUILDER(                                                        
     ProdVirialSeROp<GPUDevice, T>);
 REGISTER_GPU(float);
 REGISTER_GPU(double);
-#endif  // GOOGLE_CUDA
+#endif  // GOOGLE_CUDA || PADDLE_HIP

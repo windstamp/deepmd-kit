@@ -44,11 +44,11 @@ class GeluOp : public OpKernel {
     const int size = static_cast<int>(output_tensor->NumElements());
 
     if (device == "GPU") {
-      #if GOOGLE_CUDA
+      #if GOOGLE_CUDA || PADDLE_HIP
       deepmd::gelu_gpu_cuda(
           out, 
           x, size);
-      #endif // GOOGLE_CUDA
+      #endif // GOOGLE_CUDA || PADDLE_HIP
     }
     else if (device == "CPU") {
       deepmd::gelu_cpu(
@@ -87,11 +87,11 @@ class GeluGradOp : public OpKernel {
     const int size = static_cast<int>(output_tensor->NumElements());
 
     if (device == "GPU") {
-      #if GOOGLE_CUDA
+      #if GOOGLE_CUDA || PADDLE_HIP
       deepmd::gelu_grad_gpu_cuda(
           out, 
           x, dy, size);
-      #endif // GOOGLE_CUDA
+      #endif // GOOGLE_CUDA || PADDLE_HIP
     }
     else if (device == "CPU") {
       deepmd::gelu_grad_cpu(
@@ -128,11 +128,11 @@ class GeluGradGradOp : public OpKernel {
     const int size = static_cast<int>(output_tensor->NumElements());
 
     if (device == "GPU") {
-      #if GOOGLE_CUDA
+      #if GOOGLE_CUDA || PADDLE_HIP
       deepmd::gelu_grad_grad_gpu_cuda(
           out, 
           x, dy, dy_2, size);
-      #endif // GOOGLE_CUDA
+      #endif // GOOGLE_CUDA || PADDLE_HIP
     }
     else if (device == "CPU") {
       deepmd::gelu_grad_grad_cpu(
@@ -157,7 +157,7 @@ REGISTER_KERNEL_BUILDER(                                                \
 REGISTER_CPU(float);
 REGISTER_CPU(double);
 
-#if GOOGLE_CUDA
+#if GOOGLE_CUDA || PADDLE_HIP
 #define REGISTER_GPU(T)                                                 \
 REGISTER_KERNEL_BUILDER(                                                \
     Name("Gelu").Device(DEVICE_GPU).TypeConstraint<T>("T"),             \
@@ -170,4 +170,4 @@ REGISTER_KERNEL_BUILDER(                                                \
     GeluGradGradOp<GPUDevice, T>);                                      
 REGISTER_GPU(float);
 REGISTER_GPU(double);
-#endif // GOOGLE_CUDA
+#endif // GOOGLE_CUDA || PADDLE_HIP

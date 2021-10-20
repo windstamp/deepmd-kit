@@ -117,7 +117,7 @@ TEST_F(TestNeighborList, cpu_lessmem)
   delete[] firstneigh;
 }
 
-#if GOOGLE_CUDA
+#if GOOGLE_CUDA || PADDLE_HIP
 TEST_F(TestNeighborList, gpu)
 {
   int mem_size = 48;
@@ -225,4 +225,4 @@ TEST_F(TestNeighborList, gpu_lessmem)
   deepmd::delete_device_memory(c_cpy_dev);
 }
 
-#endif //GOOGLE_CUDA
+#endif //GOOGLE_CUDA || PADDLE_HIP

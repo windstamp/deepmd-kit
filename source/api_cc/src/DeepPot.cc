@@ -239,7 +239,7 @@ init (const std::string & model, const int & gpu_rank, const std::string & file_
     str += std::to_string(gpu_rank % gpu_num);
     graph::SetDefaultDevice(str, &graph_def);
   }
-  #endif // GOOGLE_CUDA and PADDLE_HIP
+  #endif // GOOGLE_CUDA || PADDLE_HIP
   check_status (NewSession(options, &session));
   check_status (session->Create(graph_def));
   rcut = get_scalar<VALUETYPE>("descrpt_attr/rcut");
@@ -547,7 +547,7 @@ init (const std::vector<std::string> & models, const int & gpu_rank, const std::
   cudaGetDeviceCount(&gpu_num);
   #elif PADDLE_HIP
   hipGetDeviceCount(&gpu_num);
-  #endif // GOOGLE_CUDA and PADDLE_HIP
+  #endif // GOOGLE_CUDA || PADDLE_HIP
 
   SessionOptions options;
   options.config.set_inter_op_parallelism_threads(num_inter_nthreads);
@@ -572,7 +572,7 @@ init (const std::vector<std::string> & models, const int & gpu_rank, const std::
       options.config.mutable_gpu_options()->set_allow_growth(true);
       hipErrcheck(hipSetDevice(gpu_rank % gpu_num));
   }
-  #endif // GOOGLE_CUDA and PADDLE_HIP
+  #endif // GOOGLE_CUDA || PADDLE_HIP
 
   for (unsigned ii = 0; ii < numb_models; ++ii) {
     if (gpu_num > 0) {

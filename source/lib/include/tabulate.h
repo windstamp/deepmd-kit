@@ -26,7 +26,7 @@ void tabulate_fusion_grad_cpu(
     const int nnei, 
     const int last_layer_size);
 
-#if GOOGLE_CUDA
+#if GOOGLE_CUDA || PADDLE_HIP
 template<typename FPTYPE>
 void tabulate_fusion_gpu_cuda(
     FPTYPE * out,
@@ -50,7 +50,7 @@ void tabulate_fusion_grad_gpu_cuda(
     const int nloc, 
     const int nnei, 
     const int last_layer_size);
-#endif // GOOGLE_CUDA
+#endif // GOOGLE_CUDA || PADDLE_HIP
 
 }
 

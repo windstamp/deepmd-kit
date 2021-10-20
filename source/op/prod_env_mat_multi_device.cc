@@ -106,7 +106,7 @@ _prepare_coord_nlist_cpu(
     const int & max_cpy_trial,
     const int & max_nnei_trial);
 
-#if GOOGLE_CUDA
+#if GOOGLE_CUDA || PADDLE_HIP
 template<typename FPTYPE>
 static int
 _norm_copy_coord_gpu(
@@ -177,7 +177,7 @@ _prepare_coord_nlist_gpu(
     const int & max_cpy_trial,
     const int & max_nnei_trial);
     
-#endif //GOOGLE_CUDA
+#endif //GOOGLE_CUDA || PADDLE_HIP
 
 
 template <typename Device, typename FPTYPE>
@@ -329,7 +329,7 @@ public:
       const int * type = p_type + ff*nall;
 
     if(device == "GPU") {
-      #if GOOGLE_CUDA
+      #if GOOGLE_CUDA || PADDLE_HIP
       int * idx_mapping = NULL;
       int * ilist = NULL, * numneigh = NULL;
       int ** firstneigh = NULL;
@@ -365,7 +365,7 @@ public:
           coord, type, gpu_inlist, array_int, array_longlong, max_nbor_size, avg, std, nloc, frame_nall, rcut_r, rcut_r_smth, sec_a);
       if(b_nlist_map) _map_nlist_gpu(nlist, idx_mapping, nloc, nnei);
       deepmd::delete_device_memory(firstneigh);
-      #endif //GOOGLE_CUDA
+      #endif //GOOGLE_CUDA || PADDLE_HIP
     }
     else if (device == "CPU") {
       deepmd::InputNlist inlist;
@@ -551,7 +551,7 @@ public:
       const int * type = p_type + ff*nall;
 
     if(device == "GPU") {
-      #if GOOGLE_CUDA
+      #if GOOGLE_CUDA || PADDLE_HIP
       int * idx_mapping = NULL;
       int * ilist = NULL, * numneigh = NULL;
       int ** firstneigh = NULL;
@@ -587,7 +587,7 @@ public:
           coord, type, gpu_inlist, array_int, array_longlong, max_nbor_size, avg, std, nloc, frame_nall, rcut, rcut_smth, sec);
       if(b_nlist_map) _map_nlist_gpu(nlist, idx_mapping, nloc, nnei);
       deepmd::delete_device_memory(firstneigh);
-      #endif //GOOGLE_CUDA
+      #endif //GOOGLE_CUDA || PADDLE_HIP
     }
     else if (device == "CPU") {
       deepmd::InputNlist inlist;
@@ -782,7 +782,7 @@ _prepare_coord_nlist_cpu(
   }
 }
 
-#if GOOGLE_CUDA
+#if GOOGLE_CUDA || PADDLE_HIP
 template<typename FPTYPE>
 static int
 _norm_copy_coord_gpu(
@@ -999,7 +999,7 @@ _prepare_coord_nlist_gpu(
     OP_REQUIRES (context, (max_numneigh(inlist_temp) <= GPU_MAX_NBOR_SIZE), errors::InvalidArgument ("Assert failed, max neighbor size of atom(lammps) " + std::to_string(max_numneigh(inlist_temp)) + " is larger than " + std::to_string(GPU_MAX_NBOR_SIZE) + ", which currently is not supported by deepmd-kit."));
   }
 }
-#endif  // GOOGLE_CUDA
+#endif  // GOOGLE_CUDA || PADDLE_HIP
 
 // Register the CPU kernels.
 #define REGISTER_CPU(T)                                                                                   \
@@ -1013,7 +1013,7 @@ REGISTER_CPU(float);
 REGISTER_CPU(double);                 
             
 // Register the GPU kernels.                  
-#if GOOGLE_CUDA                 
+#if GOOGLE_CUDA || PADDLE_HIP             
 #define REGISTER_GPU(T)                                                                                   \
 REGISTER_KERNEL_BUILDER(                                                                                  \
     Name("ProdEnvMatA").Device(DEVICE_GPU).TypeConstraint<T>("T").HostMemory("natoms").HostMemory("box"), \
@@ -1023,4 +1023,4 @@ REGISTER_KERNEL_BUILDER(                                                        
     ProdEnvMatROp<GPUDevice, T>);
 REGISTER_GPU(float);
 REGISTER_GPU(double);
-#endif  // GOOGLE_CUDA
+#endif  // GOOGLE_CUDA || PADDLE_HIP

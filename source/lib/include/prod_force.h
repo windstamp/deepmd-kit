@@ -22,7 +22,7 @@ void prod_force_r_cpu(
     const int nall, 
     const int nnei);
 
-#if GOOGLE_CUDA
+#if GOOGLE_CUDA || PADDLE_HIP
 template<typename FPTYPE> 
 void prod_force_a_gpu_cuda(
     FPTYPE * force, 
@@ -42,6 +42,6 @@ void prod_force_r_gpu_cuda(
     const int nloc, 
     const int nall, 
     const int nnei);
-#endif // GOOGLE_CUDA
+#endif // GOOGLE_CUDA || PADDLE_HIP
 
 }

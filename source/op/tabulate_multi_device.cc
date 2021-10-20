@@ -62,11 +62,11 @@ class TabulateFusionOp : public OpKernel {
     const int nnei = em_tensor.shape().dim_size(1);
 
     if (device == "GPU") {
-      #if GOOGLE_CUDA
+      #if GOOGLE_CUDA || PADDLE_HIP
       deepmd::tabulate_fusion_gpu_cuda(    
           descriptor,
           table, table_info, em_x, em, nloc, nnei, last_layer_size);
-      #endif // GOOGLE_CUDA
+      #endif // GOOGLE_CUDA || PADDLE_HIP
     }
     else if (device == "CPU") {
       deepmd::tabulate_fusion_cpu(    
@@ -124,11 +124,11 @@ class TabulateFusionGradOp : public OpKernel {
     const int last_layer_size = descriptor_tensor.shape().dim_size(2);
 
     if (device == "GPU") {
-      #if GOOGLE_CUDA
+      #if GOOGLE_CUDA || PADDLE_HIP
       deepmd::tabulate_fusion_grad_gpu_cuda(    
           dy_dem_x, dy_dem,
           table, table_info, em_x, em, dy, nloc, nnei, last_layer_size);
-      #endif // GOOGLE_CUDA
+      #endif // GOOGLE_CUDA || PADDLE_HIP
     }
     else if (device == "CPU") {
       deepmd::tabulate_fusion_grad_cpu(    
@@ -150,7 +150,7 @@ REGISTER_KERNEL_BUILDER(                                                        
 REGISTER_CPU(float);
 REGISTER_CPU(double);
 
-#if  GOOGLE_CUDA
+#if  GOOGLE_CUDA || PADDLE_HIP
 #define REGISTER_GPU(T)                                                                             \
 REGISTER_KERNEL_BUILDER(                                                                            \
     Name("TabulateFusion").Device(DEVICE_GPU).TypeConstraint<T>("T").HostMemory("table_info"),      \
@@ -160,4 +160,4 @@ REGISTER_KERNEL_BUILDER(                                                        
     TabulateFusionGradOp<GPUDevice, T>);                                                                
 REGISTER_GPU(float);
 REGISTER_GPU(double);
-#endif  // GOOGLE_CUDA
+#endif  // GOOGLE_CUDA || PADDLE_HIP
