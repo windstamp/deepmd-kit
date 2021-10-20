@@ -1,5 +1,10 @@
 #include "tabulate.h"
+
+#if GOOGLE_CUDA
 #include "gpu_cuda.h"
+#elif PADDLE_HIP
+#include "gpu_hip.h"
+#endif
 
 #define MM 4
 #define KK 4
@@ -203,9 +208,15 @@ void tabulate_fusion_gpu_cuda(
     const int nnei, 
     const int last_layer_size) 
 {
+  #if GOOGLE_CUDA
   tabulate_fusion_fifth_order_polynomial<FPTYPE, MM, KK> <<<nloc, last_layer_size, sizeof(FPTYPE) * MM * last_layer_size>>>(
       out, 
       table, em_x, em, table_info[0], table_info[1], table_info[2], table_info[3], table_info[4], nnei, last_layer_size);
+  #elif PADDLE_HIP
+  hipLaunchKernelGGL(tabulate_fusion_fifth_order_polynomial<FPTYPE, MM, KK>, dim3(nloc), dim3(last_layer_size), dim3(sizeof(FPTYPE) * MM * last_layer_size), 0, 0,
+      out, 
+      table, em_x, em, table_info[0], table_info[1], table_info[2], table_info[3], table_info[4], nnei, last_layer_size);
+  #endif
 }
 
 template<typename FPTYPE>
@@ -221,16 +232,31 @@ void tabulate_fusion_grad_gpu_cuda(
     const int nnei, 
     const int last_layer_size)
 {
+  #if GOOGLE_CUDA
   cudaErrcheck(cudaMemset(
       dy_dem_x,
       0.0, sizeof(FPTYPE) * nloc * nnei));
   cudaErrcheck(cudaMemset(
       dy_dem,
       0.0, sizeof(FPTYPE) * nloc * nnei * 4));
+  #elif PADDLE_HIP
+  hipErrcheck(hipMemset(
+      dy_dem_x,
+      0.0, sizeof(FPTYPE) * nloc * nnei));
+  hipErrcheck(hipMemset(
+      dy_dem,
+      0.0, sizeof(FPTYPE) * nloc * nnei * 4));
+  #endif
 
+  #if GOOGLE_CUDA
   tabulate_fusion_grad_fifth_order_polynomial<FPTYPE, MM, KK> <<<nloc, KK * WARP_SIZE, sizeof(FPTYPE) * MM * last_layer_size>>>(
       dy_dem_x, dy_dem,
       table, em_x, em, dy,  table_info[0], table_info[1], table_info[2], table_info[3], table_info[4], nnei, last_layer_size);
+  #elif PADDLE_HIP
+  hipLaunchKernelGGL(tabulate_fusion_grad_fifth_order_polynomial<FPTYPE, MM, KK>, dim3(nloc), dim3( KK * WARP_SIZE), dim3(sizeof(FPTYPE) * MM * last_layer_size), 0, 0,
+      dy_dem_x, dy_dem,
+      table, em_x, em, dy,  table_info[0], table_info[1], table_info[2], table_info[3], table_info[4], nnei, last_layer_size);
+  #endif
 }
 
 template void tabulate_fusion_gpu_cuda<float>(float * out, const float * table, const float * table_info, const float * em_x, const float * em, const int nloc, const int nnei, const int last_layer_size);

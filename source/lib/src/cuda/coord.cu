@@ -1,5 +1,11 @@
 #include "device.h"
+
+#if GOOGLE_CUDA
 #include "gpu_cuda.h"
+#elif PADDLE_HIP
+#include "gpu_hip.h"
+#endif
+
 #include "coord.h"
 #include "region.cuh"
 
@@ -270,9 +276,16 @@ void compute_int_data(
     const int * ngcell=cell_info+12;
     const FPTYPE * boxt = region.boxt;
     const FPTYPE * rec_boxt = region.rec_boxt;
+
+    #if GOOGLE_CUDA
     _compute_int_data<<<nblock, TPB>>>(in_c, nat_stt, nat_end, ext_stt, ext_end, ngcell,
         boxt, rec_boxt, idx_cellmap, idx_cellmap_noshift, total_cellnum_map, mask_cellnum_map,
         cell_map, loc_cellnum_map, cell_shift_map, temp_idx_order, nloc, loc_cellnum, total_cellnum);
+    #elif PADDLE_HIP
+    hipLaunchKernelGGL(_compute_int_data, dim3(nblock), dim3(TPB), 0, 0, in_c, nat_stt, nat_end, ext_stt, ext_end, ngcell,
+        boxt, rec_boxt, idx_cellmap, idx_cellmap_noshift, total_cellnum_map, mask_cellnum_map,
+        cell_map, loc_cellnum_map, cell_shift_map, temp_idx_order, nloc, loc_cellnum, total_cellnum);
+    #endif
 }
 
 void build_loc_clist(
@@ -286,7 +299,12 @@ void build_loc_clist(
     const int * temp_idx_order=idx_cellmap_noshift+nloc;
     const int * sec_loc_cellnum_map=temp_idx_order+nloc+loc_cellnum+2*total_cellnum+total_cellnum+3*total_cellnum;
     int * loc_clist=int_data+nloc*3+loc_cellnum+total_cellnum*3+total_cellnum*3+loc_cellnum+1+total_cellnum+1;
+
+    #if GOOGLE_CUDA
     _build_loc_clist<<<nblock, TPB>>>(loc_clist, idx_cellmap_noshift, temp_idx_order, sec_loc_cellnum_map, nloc);
+    #elif PADDLE_HIP
+    hipLaunchKernelGGL(_build_loc_clist, dim3(nblock), dim3(TPB), 0, 0, loc_clist, idx_cellmap_noshift, temp_idx_order, sec_loc_cellnum_map, nloc);
+    #endif
 }
 
 template <typename FPTYPE>
@@ -312,8 +330,14 @@ void copy_coord(
 
     const FPTYPE *boxt = region.boxt;
     const FPTYPE *rec_boxt = region.rec_boxt;
+
+    #if GOOGLE_CUDA
     _copy_coord<<<nblock, TPB>>>(out_c, out_t, mapping, in_c, in_t, cell_map, cell_shift_map, 
         sec_loc_cellnum_map, sec_total_cellnum_map, loc_clist, nloc, nall, total_cellnum, boxt, rec_boxt);
+    #elif PADDLE_HIP
+    hipLaunchKernelGGL(_copy_coord, dim3(nblock), dim3(TPB), 0, 0, out_c, out_t, mapping, in_c, in_t, cell_map, cell_shift_map, 
+        sec_loc_cellnum_map, sec_total_cellnum_map, loc_clist, nloc, nall, total_cellnum, boxt, rec_boxt);
+    #endif
 }
 
 namespace deepmd {
@@ -327,7 +351,12 @@ normalize_coord_gpu(
     const FPTYPE * boxt=region.boxt;
     const FPTYPE * rec_boxt=region.rec_boxt;
     const int nblock=(natom+TPB-1)/TPB;
+
+    #if GOOGLE_CUDA
     normalize_one<<<nblock, TPB>>>(coord, boxt, rec_boxt, natom);
+    #elif PADDLE_HIP
+    hipLaunchKernelGGL(normalize_one, dim3(nblock), dim3(TPB), 0, 0, coord, boxt, rec_boxt, natom);
+    #endif
 }
 
 //  int_data(temp cuda memory):idx_map,idx_map_noshift,temp_idx_order,loc_cellnum_map,total_cellnum_map,mask_cellnum_map,
@@ -351,7 +380,12 @@ copy_coord_gpu(
 {
     compute_int_data(int_data, in_c, cell_info, region, nloc, loc_cellnum, total_cellnum);
     int * int_data_cpu=new int [loc_cellnum+2*total_cellnum+loc_cellnum+1+total_cellnum+1];//loc_cellnum_map,total_cellnum_map,mask_cellnum_map,sec_loc_cellnum_map,sec_total_cellnum_map
+
+    #if GOOGLE_CUDA
     cudaErrcheck(cudaMemcpy(int_data_cpu, int_data+3*nloc, sizeof(int) * (loc_cellnum + 2 * total_cellnum), cudaMemcpyDeviceToHost));
+    #elif PADDLE_HIP
+    hipErrcheck(hipMemcpy(int_data_cpu, int_data+3*nloc, sizeof(int) * (loc_cellnum + 2 * total_cellnum), hipMemcpyDeviceToHost));
+    #endif
     int * loc_cellnum_map=int_data_cpu;
     int * total_cellnum_map=loc_cellnum_map+loc_cellnum;
     int * mask_cellnum_map=total_cellnum_map+total_cellnum;
@@ -373,8 +407,13 @@ copy_coord_gpu(
         return 1;
     }
     else{
+        #if GOOGLE_CUDA
         cudaErrcheck(cudaMemcpy(int_data+nloc*3+loc_cellnum+total_cellnum*3+total_cellnum*3, 
             sec_loc_cellnum_map, sizeof(int) * (loc_cellnum+1+total_cellnum+1), cudaMemcpyHostToDevice));
+        #elif PADDLE_HIP
+        hipErrcheck(hipMemcpy(int_data+nloc*3+loc_cellnum+total_cellnum*3+total_cellnum*3, 
+            sec_loc_cellnum_map, sizeof(int) * (loc_cellnum+1+total_cellnum+1), hipMemcpyHostToDevice));
+        #endif
         delete[] int_data_cpu;
         build_loc_clist(int_data, nloc, loc_cellnum, total_cellnum);
         copy_coord(out_c, out_t, mapping, int_data, in_c, in_t, nloc, *nall, loc_cellnum, total_cellnum, region);

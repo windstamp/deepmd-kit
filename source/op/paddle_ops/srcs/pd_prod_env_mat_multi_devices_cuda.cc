@@ -299,7 +299,12 @@ _norm_copy_coord_gpu(
     paddle::Tensor tmp_coord_tensor = paddle::Tensor(paddle::PlaceType::kGPU, FPTYPE_temp_shape);
     FPTYPE *tmp_coord = tmp_coord_tensor.mutable_data<FPTYPE>(paddle::PlaceType::kGPU);
     tensor_list->push_back(tmp_coord_tensor);
+
+    #if GOOGLE_CUDA
     cudaErrcheck(cudaMemcpy(tmp_coord, coord, sizeof(FPTYPE) * nall * 3, cudaMemcpyDeviceToDevice));
+    #elif PADDLE_HIP
+    hipErrcheck(hipMemcpy(tmp_coord, coord, sizeof(FPTYPE) * nall * 3, hipMemcpyDeviceToDevice));
+    #endif
 
     deepmd::Region<FPTYPE> region;
     init_region_cpu(region, box);

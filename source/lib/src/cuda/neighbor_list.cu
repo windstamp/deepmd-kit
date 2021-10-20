@@ -1,5 +1,11 @@
 #include "device.h"
+
+#if GOOGLE_CUDA
 #include "gpu_cuda.h"
+#elif PADDLE_HIP
+#include "gpu_hip.h"
+#endif
+
 #include "neighbor_list.h"
 
 template<typename FPTYPE>
@@ -124,7 +130,13 @@ int build_nlist_gpu(
     int * ilist = nlist.ilist;
     int * numneigh = nlist.numneigh;
     int ** firstneigh = nlist.firstneigh;
+
+    #if GOOGLE_CUDA
     cudaErrcheck(cudaMemset(nlist_data, -1, sizeof(int) * 2 * nloc * mem_size));
+    #elif PADDLE_HIP
+    hipErrcheck(hipMemset(nlist_data, -1, sizeof(int) * 2 * nloc * mem_size));
+    #endif
+
     int * temp_nlist = nlist_data; //nloc*mem_size
     int * nei_order = temp_nlist + nloc * mem_size;
     nlist.inum = nloc;
@@ -133,6 +145,8 @@ int build_nlist_gpu(
     
     dim3 block_grid(nloc, nblock);
     dim3 thread_grid(1, TPB);
+
+    #if GOOGLE_CUDA
     build_nlist<<<block_grid, thread_grid>>>(
                 ilist, 
                 temp_nlist,
@@ -141,7 +155,20 @@ int build_nlist_gpu(
                 nloc,
                 nall,
                 mem_size);
+    #elif PADDLE_HIP
+    hipLaunchKernelGGL(build_nlist, block_grid, thread_grid, 0, 0,
+                ilist, 
+                temp_nlist,
+                c_cpy, 
+                rcut2,
+                nloc,
+                nall,
+                mem_size);
+    #endif
+
     const int nblock_ = (nloc+TPB-1)/TPB;
+    
+    #if GOOGLE_CUDA
     scan_nlist<<<nblock_, TPB>>>(
                 numneigh, 
                 nei_order, 
@@ -149,6 +176,17 @@ int build_nlist_gpu(
                 mem_size, 
                 nloc, 
                 nall);
+    #elif PADDLE_HIP
+    hipLaunchKernelGGL(scan_nlist, dim3(nblock), dim3(TPB), 0, 0,
+                numneigh, 
+                nei_order, 
+                temp_nlist, 
+                mem_size, 
+                nloc, 
+                nall);
+    #endif
+    
+    #if GOOGLE_CUDA
     fill_nlist<<<block_grid, thread_grid>>>(
                 firstneigh,
                 temp_nlist,
@@ -156,8 +194,24 @@ int build_nlist_gpu(
                 mem_size,
                 nall
     );
+    #elif PADDLE_HIP
+    hipLaunchKernelGGL(fill_nlist, block_grid, thread_grid, 0, 0,
+                firstneigh,
+                temp_nlist,
+                nei_order,
+                mem_size,
+                nall
+    );
+    #endif
+
     int * numneigh_host = new int[nloc];
+
+    #if GOOGLE_CUDA
     cudaErrcheck(cudaMemcpy(numneigh_host, numneigh, sizeof(int) * nloc, cudaMemcpyDeviceToHost));
+    #elif PADDLE_HIP
+    hipErrcheck(hipMemcpy(numneigh_host, numneigh, sizeof(int) * nloc, hipMemcpyDeviceToHost));
+    #endif
+
     int max_nei = 0;
     for(int ii=0;ii<nloc;ii++){
         if(numneigh_host[ii]>max_nei)max_nei=numneigh_host[ii];
@@ -176,7 +230,12 @@ void use_nlist_map(
     int nblock=(nnei+TPB-1)/TPB;
     dim3 block_grid(nloc, nblock);
     dim3 thread_grid(1, TPB);
+
+    #if GOOGLE_CUDA
     map_nlist<<<block_grid,thread_grid>>>(nlist, nlist_map, nloc, nnei);
+    #elif PADDLE_HIP
+    hipLaunchKernelGGL(map_nlist, block_grid, thread_grid, 0, 0, nlist, nlist_map, nloc, nnei);
+    #endif
 }
 
 template int build_nlist_gpu<float>(InputNlist & nlist, int * max_list_size, int * nlist_data, const float * c_cpy, const int & nloc, const int & nall, const int & mem_size, const float & rcut);

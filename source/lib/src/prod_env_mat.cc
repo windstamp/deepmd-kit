@@ -256,7 +256,7 @@ prod_env_mat_r_cpu<float>(
     const float rcut_smth, 
     const std::vector<int> sec);
 
-#if GOOGLE_CUDA
+#if GOOGLE_CUDA || PADDLE_HIP
 void deepmd::env_mat_nbor_update(
     InputNlist &inlist,
     InputNlist &gpu_inlist,
@@ -266,7 +266,11 @@ void deepmd::env_mat_nbor_update(
     const int size)
 {
   int *mesh_host = new int[size];
+  #if GOOGLE_CUDA
   cudaErrcheck(cudaMemcpy(mesh_host, mesh, sizeof(int) * size, cudaMemcpyDeviceToHost));
+  #elif PADDLE_HIP
+  hipErrcheck(hipMemcpy(mesh_host, mesh, sizeof(int) * size, hipMemcpyDeviceToHost));
+  #endif
   memcpy(&inlist.ilist, 4 + mesh_host, sizeof(int *));
 	memcpy(&inlist.numneigh, 8 + mesh_host, sizeof(int *));
 	memcpy(&inlist.firstneigh, 12 + mesh_host, sizeof(int **));
@@ -319,4 +323,4 @@ void deepmd::env_mat_nbor_update(
   }
   delete [] mesh_host;
 }
-#endif // GOOGLE_CUDA
+#endif // GOOGLE_CUDA || PADDLE_HIP
