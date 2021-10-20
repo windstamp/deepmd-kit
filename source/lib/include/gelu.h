@@ -23,7 +23,7 @@ void gelu_grad_grad_cpu(
     const FPTYPE * dy_2,
     const int size);
 
-#if GOOGLE_CUDA
+#if GOOGLE_CUDA || PADDLE_HIP
 template<typename FPTYPE>
 void gelu_gpu_cuda(
     FPTYPE * out, 
@@ -44,6 +44,6 @@ void gelu_grad_grad_gpu_cuda(
     const FPTYPE * dy, 
     const FPTYPE * dy_2,
     const int size);
-#endif // GOOGLE_CUDA
+#endif // GOOGLE_CUDA || PADDLE_HIP
 
 }

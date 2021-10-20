@@ -41,7 +41,7 @@ void prod_env_mat_r_cpu(
     const float rcut_smth, 
     const std::vector<int> sec);
 
-#if GOOGLE_CUDA
+#if GOOGLE_CUDA || PADDLE_HIP
 template<typename FPTYPE> 
 void prod_env_mat_a_gpu_cuda(    
     FPTYPE * em, 
@@ -89,7 +89,7 @@ void env_mat_nbor_update(
     int* &nbor_list_dev,
     const int * mesh, 
     const int size);
-#endif // GOOGLE_CUDA
+#endif // GOOGLE_CUDA || PADDLE_HIP
 
 }
 

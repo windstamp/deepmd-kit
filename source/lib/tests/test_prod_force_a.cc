@@ -98,7 +98,7 @@ TEST_F(TestProdForceA, cpu)
   // printf("\n");
 }
 
-#if GOOGLE_CUDA
+#if GOOGLE_CUDA || PADDLE_HIP
 TEST_F(TestProdForceA, gpu_cuda)
 {
   std::vector<double> force(nall * 3, 0.0);
@@ -126,4 +126,4 @@ TEST_F(TestProdForceA, gpu_cuda)
     EXPECT_LT(fabs(force[jj] - expected_force[jj]) , 1e-5);
   }
 }
-#endif // GOOGLE_CUDA
+#endif // GOOGLE_CUDA || PADDLE_HIP

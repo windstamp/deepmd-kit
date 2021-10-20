@@ -113,7 +113,7 @@ TEST_F(TestProdVirialR, cpu)
   // printf("\n");
 }
 
-#if GOOGLE_CUDA
+#if GOOGLE_CUDA || PADDLE_HIP
 TEST_F(TestProdVirialR, gpu_cuda)
 {
   std::vector<double> virial(9, 0.0);
@@ -159,4 +159,4 @@ TEST_F(TestProdVirialR, gpu_cuda)
     EXPECT_LT(fabs(atom_virial[jj] - expected_atom_virial[jj]) , 1e-5);
   }
 }
-#endif // GOOGLE_CUDA
+#endif // GOOGLE_CUDA || PADDLE_HIP

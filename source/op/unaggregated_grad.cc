@@ -42,12 +42,12 @@ struct UnaggregatedDyDxSFunctor {
         }
     }
 
-    #if GOOGLE_CUDA
+    #if GOOGLE_CUDA || PADDLE_HIP
     void operator()(const GPUDevice& d, const FPTYPE * y, const FPTYPE * w, const int length, const int width, FPTYPE * dy_dx) {
         //Currently, Do nothing at all! 
         return;
     }
-    #endif // GOOGLE_CUDA 
+    #endif // GOOGLE_CUDA  || PADDLE_HIP
 };
 
 // calculate the gradient for all variables!
@@ -70,12 +70,12 @@ struct UnaggregatedDyDxFunctor {
         }
     }
 
-    #if GOOGLE_CUDA
+    #if GOOGLE_CUDA || PADDLE_HIP
     void operator()(const GPUDevice& d, const FPTYPE * z, const FPTYPE * w, const FPTYPE * dy_dx, const int length, const int width, const int size, FPTYPE * dz_dx) {
         //Currently, Do nothing at all! 
         return;
     }
-    #endif // GOOGLE_CUDA
+    #endif // GOOGLE_CUDA || PADDLE_HIP
 };
 
 template <typename FPTYPE>
@@ -89,12 +89,12 @@ struct UnaggregatedDy2DxSFunctor {
         }
     }
 
-    #if GOOGLE_CUDA
+    #if GOOGLE_CUDA || PADDLE_HIP
     void operator()(const GPUDevice& d, const FPTYPE * y, const FPTYPE * w, const int length, const int width, FPTYPE * dy_dx) {
         //Currently, Do nothing at all! 
         return;
     }
-    #endif // GOOGLE_CUDA 
+    #endif // GOOGLE_CUDA  || PADDLE_HIP
 };
 
 // calculate the gradient for all variables!
@@ -122,12 +122,12 @@ struct UnaggregatedDy2DxFunctor {
         }
     }
 
-    #if GOOGLE_CUDA
+    #if GOOGLE_CUDA || PADDLE_HIP
     void operator()(const GPUDevice& d, const FPTYPE * z, const FPTYPE * w, const FPTYPE * dz_dx, const FPTYPE * dy_dx, const FPTYPE * dy2_dx, const int length, const int width, const int size, FPTYPE * dz2_dx) {
         //Currently, Do nothing at all! 
         return;
     }
-    #endif // GOOGLE_CUDA
+    #endif // GOOGLE_CUDA || PADDLE_HIP
 };
 
 template<typename Device, typename FPTYPE>
@@ -297,7 +297,7 @@ REGISTER_CPU(float);
 REGISTER_CPU(double);
 // Not required in the current situation
 // // Register the GPU kernels.
-// #if GOOGLE_CUDA
+// #if GOOGLE_CUDA || PADDLE_HIP
 // #define REGISTER_GPU(T)                                                                 \
 // REGISTER_KERNEL_BUILDER(                                                                \
 //     Name("UnaggregatedDyDxS").Device(DEVICE_GPU).TypeConstraint<T>("T"),                \
@@ -307,4 +307,4 @@ REGISTER_CPU(double);
 //     UnaggregatedDyDxOp<GPUDevice, T>);                         
 // REGISTER_GPU(float);
 // REGISTER_GPU(double);
-// #endif  // GOOGLE_CUDA
+// #endif  // GOOGLE_CUDA || PADDLE_HIP

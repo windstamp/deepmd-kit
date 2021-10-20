@@ -511,7 +511,7 @@ TEST_F(TestEnvMatA, prod_cpu_equal_cpu)
 }
 
 
-#if GOOGLE_CUDA
+#if GOOGLE_CUDA || PADDLE_HIP
 TEST_F(TestEnvMatA, prod_gpu_cuda)
 {
   EXPECT_EQ(nlist_r_cpy.size(), nloc);
@@ -722,4 +722,4 @@ TEST_F(TestEnvMatA, prod_gpu_cuda_equal_cpu)
     }    
   }
 }
-#endif //GOOGLE_CUDA
+#endif //GOOGLE_CUDA || PADDLE_HIP

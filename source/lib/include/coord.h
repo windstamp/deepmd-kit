@@ -48,7 +48,7 @@ compute_cell_info(
     const float & rcut,
     const deepmd::Region<FPTYPE> & region);
 
-#if GOOGLE_CUDA
+#if GOOGLE_CUDA || PADDLE_HIP
 // normalize coords
 // output:
 // coord
@@ -89,6 +89,6 @@ copy_coord_gpu(
     const int & total_cellnum,
     const int * cell_info,
     const deepmd::Region<FPTYPE> & region);
-#endif // GOOGLE_CUDA
+#endif // GOOGLE_CUDA || PADDLE_HIP
 
 }

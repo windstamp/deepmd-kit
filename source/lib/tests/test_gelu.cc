@@ -145,7 +145,7 @@ TEST_F(TestGelu, gelu_grad_grad_cpu)
   }  
 }
 
-#if GOOGLE_CUDA
+#if GOOGLE_CUDA || PADDLE_HIP
 TEST_F(TestGelu, gelu_gpu_cuda)
 {
   std::vector<double> gelu(nloc, 0.0);
@@ -211,4 +211,4 @@ TEST_F(TestGelu, gelu_grad_grad_gpu_cuda)
     EXPECT_LT(fabs(gelu_grad_grad[jj] - expected_gelu_grad_grad[jj]) , 1e-5);
   }  
 }
-#endif // GOOGLE_CUDA
+#endif // GOOGLE_CUDA || PADDLE_HIP

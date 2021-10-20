@@ -23,12 +23,12 @@ struct DeviceFunctor {
   {
     device = "CPU";
   }
-  #if GOOGLE_CUDA
+  #if GOOGLE_CUDA || PADDLE_HIP
   void operator()(
       std::string& device, 
       const GPUDevice& d) 
   {
     device = "GPU";
   }
-  #endif // GOOGLE_CUDA
+  #endif // GOOGLE_CUDA || PADDLE_HIP
 };

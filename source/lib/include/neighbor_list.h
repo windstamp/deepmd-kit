@@ -63,7 +63,7 @@ build_nlist_cpu(
     const int & mem_size,
     const float & rcut);
 
-#if GOOGLE_CUDA
+#if GOOGLE_CUDA || PADDLE_HIP
 void convert_nlist_gpu_cuda(
     InputNlist & gpu_nlist,
     InputNlist & cpu_nlist,
@@ -102,7 +102,7 @@ void use_nlist_map(
     const int nloc, 
     const int nnei);
 	
-#endif // GOOGLE_CUDA
+#endif // GOOGLE_CUDA || PADDLE_HIP
 
 } // namespace deepmd
 

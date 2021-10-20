@@ -72,7 +72,7 @@ TEST_F(TestRegion, cpu)
     EXPECT_LT(fabs(ri2[ii] - ref_ri[ii]), 1e-10);
   }
 }
-#if GOOGLE_CUDA
+#if GOOGLE_CUDA || PADDLE_HIP
 TEST_F(TestRegion, gpu)
 {
   // check rec_box
@@ -144,7 +144,7 @@ TEST_F(TestRegion, gpu)
   region_dev.boxt = new_boxt;
   region_dev.rec_boxt = new_rec_boxt;
 }
-#endif // GOOGLE_CUDA
+#endif // GOOGLE_CUDA || PADDLE_HIP
     
 
 // double square_root (const double xx)

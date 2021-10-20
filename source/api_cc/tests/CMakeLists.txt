@@ -71,7 +71,7 @@ else()
 endif()
 
 if (USE_CUDA_TOOLKIT)
-  add_definitions("-D GOOGLE_CUDA")
+  add_definitions("-DGOOGLE_CUDA")
   include_directories(${CUDA_INCLUDE_DIRS})
   add_subdirectory(${LIB_BASE_DIR}/src/cuda cuda_binary_dir)
 endif()
