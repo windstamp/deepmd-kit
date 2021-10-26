@@ -316,6 +316,7 @@ std::vector<paddle::Tensor> PdProdEnvMatAOpForward(
   CHECK_INPUT_READY(avg_tensor);
   CHECK_INPUT_READY(std_tensor);
   
+  /*
   // Force dispatch to CPU until CUDA bug fixed
   return PdProdEnvMatAOpCPUForward(
       coord_tensor, 
@@ -331,7 +332,8 @@ std::vector<paddle::Tensor> PdProdEnvMatAOpForward(
       sel_a,
       sel_r
   );
-  /*
+  //*/
+  ///*
   if (coord_tensor.place() == paddle::PlaceType::kCPU) {
     return PdProdEnvMatAOpCPUForward(
       coord_tensor, 
@@ -364,10 +366,27 @@ std::vector<paddle::Tensor> PdProdEnvMatAOpForward(
       sel_r
     );
 #endif
+#ifdef PADDLE_WITH_HIP
+  } else if (coord_tensor.place() == paddle::PlaceType::kHIP) {
+    return PdProdEnvMatAOpCUDAForward(
+      coord_tensor, 
+      type_tensor, 
+      natoms_tensor, 
+      box_tensor, 
+      mesh_tensor, 
+      avg_tensor, 
+      std_tensor,
+      rcut_a,
+      rcut_r,
+      rcut_r_smth,
+      sel_a,
+      sel_r
+    );
+#endif
   } else {
     PD_THROW("Not implemented.");
   }
-  */
+  //*/
 }
 template <typename FPTYPE>
 static void
