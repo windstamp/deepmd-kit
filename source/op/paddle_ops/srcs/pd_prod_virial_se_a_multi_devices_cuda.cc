@@ -1,4 +1,5 @@
-#define GOOGLE_CUDA 1
+// #define GOOGLE_CUDA 1
+#define PADDLE_HIP 1
 #include <assert.h>
 #include "prod_virial.h"
 #include "paddle/extension.h"
