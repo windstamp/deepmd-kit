@@ -4,6 +4,8 @@
 #include <assert.h>
 #include <hip/hip_runtime.h>
 
+#define __HIP_PLATFORM_HCC__
+
 #define GPU_MAX_NBOR_SIZE 4096
 #define hipErrcheck(res) {hipAssert((res), __FILE__, __LINE__);}
 inline void hipAssert(hipError_t code, const char *file, int line, bool abort=true) {
