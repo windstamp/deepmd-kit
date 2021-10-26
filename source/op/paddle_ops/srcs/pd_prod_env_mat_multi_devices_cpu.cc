@@ -88,6 +88,22 @@ std::vector<paddle::Tensor> PdProdEnvMatAOpCUDAForward(
     std::vector<int> sel_r);
 #endif
 
+#ifdef PADDLE_WITH_HIP
+std::vector<paddle::Tensor> PdProdEnvMatAOpCUDAForward(
+    const paddle::Tensor &coord_tensor,
+    const paddle::Tensor &type_tensor,
+    const paddle::Tensor &natoms_tensor,
+    const paddle::Tensor &box_tensor,
+    const paddle::Tensor &mesh_tensor,
+    const paddle::Tensor &avg_tensor,
+    const paddle::Tensor &std_tensor,
+    float rcut_a,
+    float rcut_r,
+    float rcut_r_smth,
+    std::vector<int> sel_a,
+    std::vector<int> sel_r);
+#endif
+
 template <typename data_t>
 void PdProdEnvMatAOpCPUForwardKernel(
     int nsamples, int nloc, int ndescrpt, int nnei, int nall, int mem_cpy, int mem_nnei,
@@ -282,6 +298,9 @@ std::vector<paddle::Tensor> PdProdEnvMatAOpForward(
   CHECK_INPUT_READY(mesh_tensor);
   CHECK_INPUT_READY(avg_tensor);
   CHECK_INPUT_READY(std_tensor);
+  
+  std::cout << "!!!!!!!!!!!!!!! coord_tensor.place(): " << static_cast<std::underlying_type<paddle::PlaceType>::type>(coord_tensor.place());
+
   if (coord_tensor.place() == paddle::PlaceType::kCPU) {
     return PdProdEnvMatAOpCPUForward(
       coord_tensor, 
@@ -299,6 +318,23 @@ std::vector<paddle::Tensor> PdProdEnvMatAOpForward(
     );
 #ifdef PADDLE_WITH_CUDA
   } else if (coord_tensor.place() == paddle::PlaceType::kGPU) {
+    return PdProdEnvMatAOpCUDAForward(
+      coord_tensor, 
+      type_tensor, 
+      natoms_tensor, 
+      box_tensor, 
+      mesh_tensor, 
+      avg_tensor, 
+      std_tensor,
+      rcut_a,
+      rcut_r,
+      rcut_r_smth,
+      sel_a,
+      sel_r
+    );
+#endif
+#ifdef PADDLE_WITH_HIP
+  } else if (coord_tensor.place() == paddle::PlaceType::kHIP) {
     return PdProdEnvMatAOpCUDAForward(
       coord_tensor, 
       type_tensor, 
