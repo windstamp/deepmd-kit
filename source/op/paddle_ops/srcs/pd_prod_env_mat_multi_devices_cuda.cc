@@ -1,4 +1,5 @@
-#define GOOGLE_CUDA 1
+// #define GOOGLE_CUDA 1
+#define PADDLE_HIP 1
 #include "paddle/extension.h"
 #include "utilities.h"
 #include "coord.h"

@@ -1,4 +1,5 @@
-#define GOOGLE_CUDA 1
+// #define GOOGLE_CUDA 1
+#define PADDLE_HIP 1
 #include "prod_force.h"
 #include "paddle/extension.h"
 #include <assert.h>
