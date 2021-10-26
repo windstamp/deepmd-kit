@@ -1,10 +1,11 @@
 #pragma once
+
+#define __HIP_PLATFORM_HCC__
+
 #include <vector>
 #include <stdio.h>
 #include <assert.h>
 #include <hip/hip_runtime.h>
-
-#define __HIP_PLATFORM_HCC__
 
 #define GPU_MAX_NBOR_SIZE 4096
 #define hipErrcheck(res) {hipAssert((res), __FILE__, __LINE__);}
