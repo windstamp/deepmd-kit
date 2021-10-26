@@ -221,19 +221,25 @@ const paddle::Tensor& nlist_tensor,
 const paddle::Tensor& natoms_tensor,
 int n_a_sel, 
 int n_r_sel){
+    /*
     // Force dispatch to CPU until CUDA bug fixed
     return PdProdForceSeAOpCPUForward(net_deriv_tensor, in_deriv_tensor, nlist_tensor, natoms_tensor, n_a_sel, n_r_sel);
-    /*
+    */
+    ///*
     if(net_deriv_tensor.place() == paddle::PlaceType::kCPU){
         return PdProdForceSeAOpCPUForward(net_deriv_tensor, in_deriv_tensor, nlist_tensor, natoms_tensor, n_a_sel, n_r_sel);
 #ifdef PADDLE_WITH_CUDA
     }else if(net_deriv_tensor.place() == paddle::PlaceType::kGPU){
         return PdProdForceSeAOpCUDAForward(net_deriv_tensor, in_deriv_tensor, nlist_tensor, natoms_tensor, n_a_sel, n_r_sel);
 #endif
+#ifdef PADDLE_WITH_HIP
+    }else if(net_deriv_tensor.place() == paddle::PlaceType::kHIP){
+        return PdProdForceSeAOpCUDAForward(net_deriv_tensor, in_deriv_tensor, nlist_tensor, natoms_tensor, n_a_sel, n_r_sel);
+#endif
     }else{
         PD_THROW("No Such kernel for PdFrodForceSeAForward!");
     }
-    */
+    //*/
 }
 
 std::vector<paddle::Tensor> PdProdForceSeABackward(
